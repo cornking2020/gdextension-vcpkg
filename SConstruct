@@ -1,57 +1,63 @@
-#!/usr/bin/env python
-from glob import glob
-from pathlib import Path
+import os
 
-# TODO: Do not copy environment after godot-cpp/test is updated <https://github.com/godotengine/godot-cpp/blob/master/test/SConstruct>.
-env = SConscript("godot-cpp/SConstruct")
+godot_project_dir = os.getcwd()
+godot_sconstruct_path = os.path.join(godot_project_dir, "godot-cpp", "SConstruct")
+extension_name = "example"
+lib_name = "example"
+source_dir = os.path.join(godot_project_dir, "src")
+build_dir = os.path.join(godot_project_dir, "build")
+bin_dir = os.path.join(godot_project_dir, "project", "addons", extension_name, "bin")
+vcpkg_installed_dir = os.path.join(godot_project_dir, "vcpkg_installed")
 
-# Add source files.
-env.Append(CPPPATH=["src/"])
+env = SConscript(godot_sconstruct_path)
 
-vcpkg_triplet = {
-    'windows': 'x64-windows',
-    'linux': 'x64-linux',
-    'macos': 'arm64-osx'
-}[env["platform"]]
+# Detect the platform
+platform = env["platform"]
+print("platform: ", platform)
 
-# Add vcpkg include paths.
-env.Append(CPPPATH=[f"vcpkg_installed/{vcpkg_triplet}/include"])
-
-# Add vcpkg library paths.
-env.Append(LIBPATH=[f"vcpkg_installed/{vcpkg_triplet}/lib"])
-
-# Add vcpkg libraries.
-env.Append(LIBS=[lib.stem for lib in Path(
-    f"vcpkg_installed/{vcpkg_triplet}/lib").glob("*.a")])
-
+# Set up the source files
 sources = Glob("src/*.cpp")
 
-# Find gdextension path even if the directory or extension is renamed (e.g. project/addons/example/example.gdextension).
-(extension_path,) = glob("project/addons/*/*.gdextension")
+# Platform-specific configurations
+if platform == "windows":
+    vcpkg_triplet = "x64-windows"
+    env.Append(CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-"])
+elif platform == "linux":
+    vcpkg_triplet = "x64-linux"
+    env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])
+elif platform == "macos":
+    vcpkg_triplet = "arm64-osx" if env["arch"] == "arm64" else "x64-osx"
+    env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])
+elif platform == "ios":
+    vcpkg_triplet = "arm64-ios"
+    env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])
+elif platform == "android":
+    vcpkg_triplet = "arm64-android"
+    env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])
+elif platform == "web":
+    vcpkg_triplet = "wasm32-emscripten"
+    env.Append(CXXFLAGS=["-std=c++17", "-s", "USE_PTHREADS=1"])
+    env.Append(LINKFLAGS=["-s", "USE_PTHREADS=1"])
 
-# Find the addon path (e.g. project/addons/example).
-addon_path = Path(extension_path).parent
+# VTK and ITK configurations
+env.Append(
+    CPPPATH=[
+        f"{vcpkg_installed_dir}/arm64-osx/include",
+        f"{vcpkg_installed_dir}/arm64-osx/include/ITK-5.4",
+    ]
+)
+env.Append(LIBPATH=[f"{vcpkg_installed_dir}/arm64-osx/lib"])
+vcpkg_libs = ["ITKCommon-5.4"]
+env.Append(LIBS=vcpkg_libs)  # Add more specific libraries as needed
 
-# Find the project name from the gdextension file (e.g. example).
-project_name = Path(extension_path).stem
-
-# TODO: Cache is disabled currently.
-# scons_cache_path = os.environ.get("SCONS_CACHE")
-# if scons_cache_path != None:
-#     CacheDir(scons_cache_path)
-#     print("Scons cache enabled... (path: '" + scons_cache_path + "')")
-
-# Create the library target (e.g. libexample.linux.debug.x86_64.so).
-debug_or_release = "release" if env["target"] == "template_release" else "debug"
-if env["platform"] == "macos":
-    library = env.SharedLibrary(
-        f"{addon_path}/bin/lib{project_name}.{env['platform']}.{debug_or_release}.framework/{project_name}.{env['platform']}.{debug_or_release}",
-        source=sources,
-    )
+# Build the shared library
+if platform == "macos":
+    lib_dir = f"{bin_dir}/lib{lib_name}.{env['platform']}.{env['target']}.framework/{lib_name}.{env['platform']}.{env['target']}"
+elif platform == "web":
+    lib_dir = f"{bin_dir}/lib{lib_name}.wasm"
 else:
-    library = env.SharedLibrary(
-        f"{addon_path}/bin/lib{project_name}.{env['platform']}.{debug_or_release}.{env['arch']}{env['SHLIBSUFFIX']}",
-        source=sources,
-    )
+    lib_dir = f"{bin_dir}/lib{lib_name}.{env['platform']}.{env['target']}.{env['arch']}{env['SHLIBSUFFIX']}"
+
+library = env.SharedLibrary(lib_dir, source=sources)
 
 Default(library)

@@ -2,7 +2,6 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-#include <fmt/core.h>
 
 using namespace godot;
 
@@ -20,7 +19,7 @@ MySingleton *MySingleton::get_singleton()
 
 MySingleton::MySingleton()
 {
-	fmt::print("MySingleton created!\n");
+	UtilityFunctions::print("MySingleton created!");
 	ERR_FAIL_COND(singleton != nullptr);
 	singleton = this;
 }

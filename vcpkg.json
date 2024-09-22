@@ -4,12 +4,12 @@
 	"version-string": "1.0.0",
 	"dependencies": [
 		{
-			"name": "fmt",
-			"version>=": "11.0.2"
+			"name": "opencv",
+			"version>=": "4.8.0#1"
 		},
 		{
-			"name": "sqlite3",
-			"version>=": "3.46.1"
+			"name": "itk",
+			"version>=": "5.4.0#0"
 		}
 	]
 }

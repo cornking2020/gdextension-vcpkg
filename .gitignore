@@ -7,4 +7,5 @@
 .vscode
 *.os
 *.pyc
+bin
 vcpkg_installed

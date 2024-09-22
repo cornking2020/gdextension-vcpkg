@@ -47,8 +47,13 @@ env.Append(
     ]
 )
 env.Append(LIBPATH=[f"{vcpkg_installed_dir}/{vcpkg_triplet}/lib"])
-vcpkg_libs = ["ITKCommon-5.4"]
-env.Append(LIBS=vcpkg_libs)  # Add more specific libraries as needed
+vcpkg_libs = [
+    "ITKCommon-5.4",
+    "itkvnl-5.4",
+    "itkvnl_algo-5.4",
+    "ITKVNLInstantiation-5.4",
+]
+env.Append(LIBS=vcpkg_libs)
 
 # Build the shared library
 if platform == "macos":

@@ -42,11 +42,11 @@ elif platform == "web":
 # VTK and ITK configurations
 env.Append(
     CPPPATH=[
-        f"{vcpkg_installed_dir}/arm64-osx/include",
-        f"{vcpkg_installed_dir}/arm64-osx/include/ITK-5.4",
+        f"{vcpkg_installed_dir}/{vcpkg_triplet}/include",
+        f"{vcpkg_installed_dir}/{vcpkg_triplet}/include/ITK-5.4",
     ]
 )
-env.Append(LIBPATH=[f"{vcpkg_installed_dir}/arm64-osx/lib"])
+env.Append(LIBPATH=[f"{vcpkg_installed_dir}/{vcpkg_triplet}/lib"])
 vcpkg_libs = ["ITKCommon-5.4"]
 env.Append(LIBS=vcpkg_libs)  # Add more specific libraries as needed
 

@@ -21,7 +21,7 @@ sources = Glob("src/*.cpp")
 # Platform-specific configurations
 if platform == "windows":
     vcpkg_triplet = "x64-windows"
-    env.Append(CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-"])
+    env.Append(CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-", "/EHsc"])
 elif platform == "linux":
     vcpkg_triplet = "x64-linux"
     env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])

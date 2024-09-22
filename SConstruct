@@ -1,4 +1,5 @@
 import os
+import glob
 
 godot_project_dir = os.getcwd()
 godot_sconstruct_path = os.path.join(godot_project_dir, "godot-cpp", "SConstruct")
@@ -39,7 +40,16 @@ elif platform == "web":
     env.Append(CXXFLAGS=["-std=c++17", "-s", "USE_PTHREADS=1"])
     env.Append(LINKFLAGS=["-s", "USE_PTHREADS=1"])
 
-# VTK and ITK configurations
+# 自动检测并包含 VCPKG 中的所有库
+def get_vcpkg_libs(vcpkg_installed_dir, vcpkg_triplet):
+    lib_dir = os.path.join(vcpkg_installed_dir, vcpkg_triplet, "lib")
+    lib_files = glob.glob(os.path.join(lib_dir, "*.lib"))
+    return [os.path.splitext(os.path.basename(lib))[0] for lib in lib_files]
+
+# 获取所有 VCPKG 库
+vcpkg_libs = get_vcpkg_libs(vcpkg_installed_dir, vcpkg_triplet)
+
+# VTK 和 ITK 配置
 env.Append(
     CPPPATH=[
         f"{vcpkg_installed_dir}/{vcpkg_triplet}/include",
@@ -47,12 +57,6 @@ env.Append(
     ]
 )
 env.Append(LIBPATH=[f"{vcpkg_installed_dir}/{vcpkg_triplet}/lib"])
-vcpkg_libs = [
-    "ITKCommon-5.4",
-    "itkvnl-5.4",
-    "itkvnl_algo-5.4",
-    "ITKVNLInstantiation-5.4",
-]
 env.Append(LIBS=vcpkg_libs)
 
 # Build the shared library

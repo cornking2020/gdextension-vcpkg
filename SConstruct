@@ -22,10 +22,18 @@ sources = Glob("src/*.cpp")
 # Platform-specific configurations
 if platform == "windows":
     vcpkg_triplet = "x64-windows"
-    env.Append(CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-", "/EHsc"])
-elif platform == "linux":
-    vcpkg_triplet = "x64-linux"
-    env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])
+    env.Append(
+        CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-", "/EHsc", "/MDd"]
+    )
+    env.Append(
+        LINKFLAGS=[
+            "/NODEFAULTLIB:libcmt.lib",
+            "/NODEFAULTLIB:libcmtd.lib",
+            "/NODEFAULTLIB:msvcrt.lib",
+        ]
+    )
+    # 只在 Windows 平台添加这些标志
+    env.Append(LINKFLAGS=["/IGNORE:4098", "/IGNORE:4099"])
 elif platform == "macos":
     vcpkg_triplet = "arm64-osx" if env["arch"] == "arm64" else "x64-osx"
     env.Append(CXXFLAGS=["-std=c++17", "-fexceptions"])
@@ -40,11 +48,18 @@ elif platform == "web":
     env.Append(CXXFLAGS=["-std=c++17", "-s", "USE_PTHREADS=1"])
     env.Append(LINKFLAGS=["-s", "USE_PTHREADS=1"])
 
+
 # 自动检测并包含 VCPKG 中的所有库
 def get_vcpkg_libs(vcpkg_installed_dir, vcpkg_triplet):
     lib_dir = os.path.join(vcpkg_installed_dir, vcpkg_triplet, "lib")
-    lib_files = glob.glob(os.path.join(lib_dir, "*.lib"))
+    if platform == "windows":
+        lib_files = glob.glob(os.path.join(lib_dir, "*.lib"))
+    else:
+        lib_files = glob.glob(os.path.join(lib_dir, "*.a")) + glob.glob(
+            os.path.join(lib_dir, "*.dylib")
+        )
     return [os.path.splitext(os.path.basename(lib))[0] for lib in lib_files]
+
 
 # 获取所有 VCPKG 库
 vcpkg_libs = get_vcpkg_libs(vcpkg_installed_dir, vcpkg_triplet)

@@ -22,16 +22,22 @@ sources = Glob("src/*.cpp")
 # Platform-specific configurations
 if platform == "windows":
     vcpkg_triplet = "x64-windows"
-    env.Append(
-        CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-", "/EHsc", "/MDd"]
-    )
-    env.Append(
-        LINKFLAGS=[
-            "/NODEFAULTLIB:libcmt.lib",
-            "/NODEFAULTLIB:libcmtd.lib",
-            "/NODEFAULTLIB:msvcrt.lib",
-        ]
-    )
+    env.Append(CXXFLAGS=["/std:c++17", "/Zc:__cplusplus", "/permissive-", "/EHsc"])
+
+    # 根据构建类型选择正确的运行时库
+    if env["target"] == "debug":
+        env.Append(CXXFLAGS=["/MDd"])
+        env.Append(
+            LINKFLAGS=[
+                "/NODEFAULTLIB:libcmt.lib",
+                "/NODEFAULTLIB:libcmtd.lib",
+                "/NODEFAULTLIB:msvcrt.lib",
+            ]
+        )
+    else:
+        env.Append(CXXFLAGS=["/MD"])
+        env.Append(LINKFLAGS=["/NODEFAULTLIB:libcmt.lib", "/NODEFAULTLIB:msvcrtd.lib"])
+
     # 只在 Windows 平台添加这些标志
     env.Append(LINKFLAGS=["/IGNORE:4098", "/IGNORE:4099"])
 elif platform == "macos":

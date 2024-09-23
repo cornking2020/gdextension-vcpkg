@@ -6,3 +6,5 @@
 script = ExtResource("1_lih0m")
 
 [node name="MyNode" type="MyNode" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="MyNode"]
